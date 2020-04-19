@@ -1,5 +1,5 @@
 {
-  "name": "react-starter",
+  "name": "tic-tac-toe",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -28,7 +28,10 @@
   "dependencies": {
     "file-loader": "^6.0.0",
     "node-sass": "^4.13.1",
+    "path": "^0.12.7",
     "sass-loader": "^8.0.2",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
     "svg-url-loader": "^5.0.0"
   }
 }

@@ -1,5 +1,11 @@
 const HtmlWebPackPlugin = require("html-webpack-plugin");
+const path = require('path')
 module.exports = {
+  devServer: {
+    contentBase: path.join(__dirname, 'src'),
+    compress: true,
+    port: 8080
+  },
   devtool : 'inline-source-map',
   module: {
     rules: [
