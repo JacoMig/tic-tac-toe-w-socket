@@ -11,13 +11,9 @@ const Game = (props) => {
     const [info, setInfo] = useState()
     const [startPlay, setStartPlay] = useState(false)
     const [movingPlayerId, setMovingPlayerId ] = useState()
-    const [player, setPlayer] = useState()
+    const [gameOver, setGameOver] = useState()
 
     const clickCell = (id) => {
-       
-       // setPlayerOne({cells: playerOne.isPlaying ? [...playerOne.cells, id] : [...playerOne.cells], isPlaying: !playerOne.isPlaying})
-       // setPlayerTwo({cells: playerTwo.isPlaying ? [...playerTwo.cells, id] : [...playerTwo.cells], isPlaying: !playerTwo.isPlaying})
-       console.log(socket.id)
        if(startPlay && movingPlayerId === socket.id){
             socket.emit('handleClick',  {
                 playerOne: {
@@ -34,38 +30,13 @@ const Game = (props) => {
        }
     }
 
-    const checker = (arr, target) => target.every(v => arr.includes(v));
-    const winCombos = [
-        [1,2,3],
-        [1,4,7],
-        [7,8,9],
-        [4,5,6],
-        [1,5,9],
-        [3,5,7],
-        [2,5,8]
-    ]
-
-    useEffect(() => {
-       if(!playerOne.isPlaying){
-        checkGame(playerOne.cells, "Player One")
-       }else if (!playerTwo.isPlaying){
-        checkGame(playerTwo.cells, "Player Two")
-       }
-    }, [playerOne.cells, playerTwo.cells])
-    
-    
-    const checkGame = (cellsPlayer, player) => {
-        let result = ""
-        winCombos.some(combo => {
-            checker(cellsPlayer, combo) ? result = "wiin" : "continue"
-        })
-        console.log(player, result)
+    const playAgain = () => {
+        socket.emit('playAgain')
     }
 
-   
     useEffect(() => {
         socket.on('info', function (data) {
-            setInfo(data);
+           setInfo(data)
         });  
         socket.on('game', function (data) {
            // setInfo(data);
@@ -74,7 +45,10 @@ const Game = (props) => {
           setCells(data.cells)  
           setStartPlay(data.startPlay)
           setMovingPlayerId(data.movingPlayerId)
+          setGameOver(data.winner)
           console.log(data)
+          console.log('Game')
+          
         });  
        // socket.on('connect', onConnect);
     }, [])
@@ -83,16 +57,14 @@ const Game = (props) => {
     return (
         <>
             <h3>
-               {/*  Player: */}
                {info}
             </h3>
-            {/* <p>
-                {playerOne.isPlaying && <span>playerOne</span>}
-                {playerTwo.isPlaying && <span>playerTwo</span>}
-            </p> */}
+            {gameOver !== "" &&
+                <button onClick={playAgain}>Play Again</button>
+            }
             <table>
                 <tbody>
-                {cells.length > 0 && cells.map((c,i) => {
+                {gameOver === "" && cells.length > 0 && cells.map((c,i) => {
                     if(i % 3 === 0){
                     return <tr key={cells[i].id}>
                         <td onClick={() => clickCell(cells[i].id)}>{cells[i].value}</td>

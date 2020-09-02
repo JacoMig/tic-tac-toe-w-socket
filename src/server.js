@@ -14,6 +14,32 @@ const initCells = [
     {value: "",  id: 8},    
     {value: "",  id: 9},   
 ] 
+
+const winCombos = [
+    [1,2,3],
+    [1,4,7],
+    [7,8,9],
+    [4,5,6],
+    [1,5,9],
+    [3,5,7],
+    [2,5,8],
+    [3,6,9]
+]
+const checker = (arr, target) => target.every(v => arr.includes(v));
+
+const checkGame = (cells) => {
+    let result = false
+    for(let i = 0; i < winCombos.length; i++){
+        if(checker(cells, winCombos[i])){
+            result = true;
+            break;
+        }else {
+            result = false;
+        }
+    }
+    return result
+}
+
 function Player(id, name, cells, isPlaying){
     this.id = id;
     this.name = name;
@@ -21,12 +47,11 @@ function Player(id, name, cells, isPlaying){
     this.isPlaying = isPlaying;
 }
 
-function Game(PlayerA, PlayerB, cells, startPlay, movingPlayerId){
-    this.PlayerA = PlayerA
-    this.PlayerB = PlayerB
+function Game(cells, startPlay, movingPlayerId){
     this.cells = cells
     this.startPlay = startPlay
     this.movingPlayerId = movingPlayerId
+    this.winner = ""
 }
 const game = new Game()
 
@@ -40,10 +65,6 @@ io.on('connection', (socket) => {
         game.startPlay = false
         game.cells = initCells
         game.movingPlayerId = game.playerA.id
-        /*  
-        game.playerB = new Player('notAvailable', 'Player B', [randomNumber], false);
-        game.movingPlayerId = game.playerA.id;
-        game.operators = []; */
         info = 'Hi Player A, please make a move.'
         io.sockets.connected[socket.id].emit('info', info);
         //emit game user only to our first player
@@ -51,14 +72,13 @@ io.on('connection', (socket) => {
     } else if(players.length === 2) {
         game.playerB.id = socket.id;
         game.startPlay = true
-        
-        if(game.movingPlayerId === game.playerA.id) {
+       /*  if(game.movingPlayerId === game.playerA.id) {
             info = 'Hi Player B! ...waiting for Player A';
         } else {
             info = 'Hi Player B! Please make a move.';
             game.movingPlayerId = game.playerB.id;
-        }
-     //   info = 'Hi Player B! Please make a move.';
+        } */
+        info = 'Hi Player B, please make a move.';
         io.sockets.connected[socket.id].emit('info', info);
         io.sockets.emit('game', game);
     }else {
@@ -69,6 +89,7 @@ io.on('connection', (socket) => {
     };
 
     socket.on('handleClick', (data) => {
+        let cellsToCheck = []
         if(game.playerB.name !== 'notAvailable'){
             game.playerA = {
                 ...game.playerA, 
@@ -84,13 +105,31 @@ io.on('connection', (socket) => {
                             }
                             return c
                         })
-            game.movingPlayerId =  data.socketId
+            game.movingPlayerId =  !game.playerA.isPlaying ? game.playerB.id : game.playerA.id
+            cellsToCheck = !game.playerA.isPlaying ? data.playerOne.cells : data.playerTwo.cells
+            if(checkGame(cellsToCheck)){
+                game.winner = !game.playerA.isPlaying ? game.playerA.name : game.playerB.name
+                io.sockets.emit('info', `${game.winner} won!!`);
+            }
             io.sockets.emit('game', game);
         }
-        
-        console.log(data) 
-        
+    })
 
+    socket.on('playAgain', () => {
+       // players = [];
+        game.cells = game.cells.map(cell => ({ value: "", id: cell.id }));
+        game.playerA.cells = []
+        game.playerA.isPlaying = true
+        game.playerB.cells = []
+        game.playerB.isPlaying = false
+        game.movingPlayerId = game.playerA.id
+        game.winner= ""
+        io.sockets.connected[game.playerA.id].emit('info', "Hi Player A, please make a move");
+        io.sockets.connected[game.playerB.id].emit('info', "Hi Player B, please make a move");
+        // io.sockets.emit('info', info);
+        io.sockets.emit('game', game);
+        // console.log(game)
+        console.log(socket.id)
     })
 
     socket.on('disconnect', function() {
