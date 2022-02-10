@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "file-loader": "^6.0.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.0",
     "path": "^0.12.7",
     "sass-loader": "^8.0.2",
     "socket.io": "^2.3.0",
